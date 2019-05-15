@@ -6,6 +6,8 @@ Library/
 .vs/
 obj/
 Logs/
+.vscode/
+__pycache__/
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
