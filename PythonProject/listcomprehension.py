@@ -39,9 +39,15 @@ print(arr8)
 print(arr9)
 print(arr10)
 
-arr11=[1,3,5,7,9,11,13,15,17,19]
-arr12=[2,4,6,8,10,12,14,16,18,20]
+arr11=[i for i in range(1,21) if i%2==1]
+arr12=[i for i in range(1,21) if i%2==0]
 
 for i in range(len(arr11)):
     print(arr11[i],"<--->",arr12[i])
+
+arr13=[i for i in range(1,21,2)]
+arr14=[i for i in range(2,21,2)]
+
+for i,j in zip(arr13,arr14):
+    print(i,j,sep="<-->")    
     
