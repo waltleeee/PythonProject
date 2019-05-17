@@ -33,3 +33,7 @@ if h>175 or w>80:
 
 if grade>70 and grade<90:
     print("normal")         
+
+a=10
+b=3.0
+print(a/b)    
