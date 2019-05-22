@@ -1,13 +1,16 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+import base64
 
 
 @csrf_exempt
 def index(request):
     print("SHOW REQUEST")
-    print(request)
-    print(request.method)
+    baseString = bytes.decode(request.body)
+    jsonString = base64.decodestring(baseString)
+    print(baseString)
+    print(jsonString)
     return HttpResponse("Hello, world. You're at the poll index.")
 
 
