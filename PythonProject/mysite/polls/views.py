@@ -7,10 +7,10 @@ import base64
 @csrf_exempt
 def index(request):
     print("SHOW REQUEST")
-    baseString = bytes.decode(request.body)
-    jsonString = base64.decodestring(baseString)
+    baseString = str(request.body, encoding="utf-8")
+    #jsonString = base64.decodestring(baseString)
     print(baseString)
-    print(jsonString)
+    #print(jsonString)
     return HttpResponse("Hello, world. You're at the poll index.")
 
 
