@@ -1,0 +1,12 @@
+requestError = "requestError"
+requestLogin = "requestLogin"
+requestRegister = "requestRegister"
+requestRecord = "requestRecord"
+requestLogout = "requestLogout"
+requestUploadRecord = "requestUploadRecord"
+
+responseLogin = "responseLogin"
+responseRegister = "responseRegister"
+responseRecord = "responseRecord"
+responseLogout = "responseLogout"
+responseUploadRecord = "responseUploadRecord"
