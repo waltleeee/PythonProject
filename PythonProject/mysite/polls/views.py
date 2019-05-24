@@ -56,12 +56,12 @@ class circultTimeData:
     CircultName = ""
     Time = ""
 
-    def __jsonencode__(self):
-        return {
-            "Account": self.Account,
-            "CircultName": self.CircultName,
-            "Time": self.Time
-        }
+    # def __jsonencode__(self):
+    #     return {
+    #         "Account": self.Account,
+    #         "CircultName": self.CircultName,
+    #         "Time": self.Time
+    #     }
 
     def GetData(self):
         return {
@@ -130,7 +130,7 @@ def requestRegisterWork(inJsonData):
     print(registerData.Account)
     print(registerData.Password)
 
-    #check can login or not
+    #check can Register or not
 
     #TEST
     responseRegisterData = ResponseRegisterData()
@@ -154,7 +154,7 @@ def requestLogoutWork(inJsonData):
     print("REQUEST LOGOUT DATA:")
     print(logoutData.UserID)
 
-    #check can login or not
+    #check can logout or not
 
     #TEST
     responseLogoutData = ResponseLogoutData()
@@ -182,7 +182,7 @@ def requestRecordWork(inJsonData):
     print(recordData.RequestCount)
     print(recordData.StartNumber)
 
-    #check can login or not
+    #check can get record or not
 
     #TEST
     responseRecordData = ResponseRecordData()
@@ -225,7 +225,7 @@ def requestUploadRecordWork(inJsonData):
     print(recordData.UserID)
     print(recordData.StartNumber)
 
-    #check can login or not
+    #check can upload record or not
 
     #TEST
     responseUploadRecordData = ResponseUploadRecordData()
