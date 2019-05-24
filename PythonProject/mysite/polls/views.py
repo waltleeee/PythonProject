@@ -56,6 +56,20 @@ class circultTimeData:
     CircultName = ""
     Time = ""
 
+    def __jsonencode__(self):
+        return {
+            "Account": self.Account,
+            "CircultName": self.CircultName,
+            "Time": self.Time
+        }
+
+    def GetData(self):
+        return {
+            "Account": self.Account,
+            "CircultName": self.CircultName,
+            "Time": self.Time
+        }
+
 
 class ResponseRecordData:
     Status = 0
@@ -64,6 +78,17 @@ class ResponseRecordData:
 
 class ResponseUploadRecordData:
     Status = 0
+
+
+# class AdvancedJSONEncoder(json.JSONEncoder):
+#     def default(self, obj):
+#         if hasattr(obj, '__jsonencode__'):
+#             return obj.__jsonencode__()
+
+#         if isinstance(obj, set):
+#             return list(obj)
+
+#         return json.JSONEncoder.default(self, obj)
 
 
 def requestLoginWork(inJsonData):
@@ -134,7 +159,7 @@ def requestLogoutWork(inJsonData):
     #TEST
     responseLogoutData = ResponseLogoutData()
     responseLogoutData.Status = 1
-
+    print(responseLogoutData)
     jsonData = json.dumps(vars(responseLogoutData))
 
     serverData.JsonData = jsonData
@@ -143,13 +168,109 @@ def requestLogoutWork(inJsonData):
 
 
 def requestRecordWork(inJsonData):
+    serverData = ServerData()
+    serverData.Command = serverCommand.responseRecord
+
+    recordData = RequestRecordData()
+    recordDataString = json.loads(inJsonData)
+    recordData.CircultName = recordDataString["CircultName"]
+    recordData.RequestCount = recordDataString["RequestCount"]
+    recordData.StartNumber = recordDataString["StartNumber"]
+
+    print("REQUEST RECORD DATA:")
+    print(recordData.CircultName)
+    print(recordData.RequestCount)
+    print(recordData.StartNumber)
+
+    #check can login or not
+
+    #TEST
     responseRecordData = ResponseRecordData()
-    return responseRecordData
+    circultData0 = circultTimeData()
+    circultData1 = circultTimeData()
+
+    circultData0.Account = "WALT"
+    circultData0.CircultName = "MuteCity"
+    circultData0.Time = "1:14.133"
+    circultData1.Account = "WALT2"
+    circultData1.CircultName = "MuteCity"
+    circultData1.Time = "1:15.256"
+
+    #data001 = json.dumps(vars(circultData0))
+    #data002 = json.dumps(vars(circultData1))
+    data001 = circultData0.GetData()
+    data002 = circultData1.GetData()
+
+    print("!!!!!")
+    print(data001)
+    print(data002)
+    # data003 = {
+    #     "Account": "WALT",
+    #     "Time": "1:14.133",
+    #     "CircultName": "MuteCity"
+    # }
+
+    # data004 = {
+    #     "Account": "WALT2",
+    #     "Time": "1:15.133",
+    #     "CircultName": "MuteCity"
+    # }
+
+    #OK
+    #responseRecordData.RecordList = [data003, data004]
+
+    #NOT OK
+    #responseRecordData.RecordList.append(data003)
+    #responseRecordData.RecordList.append(data004)
+
+    #OK
+    testData = []
+    testData.append(data001)
+    testData.append(data002)
+
+    #dicData = list(testData)
+    #print("DICDATA: \n", dicData)
+    #print("TESTDATA: \n", testData)
+    #responseRecordData.RecordList = dicData
+    responseRecordData.RecordList = testData
+    #responseRecordData.RecordList.append(data001)
+    #responseRecordData.RecordList.append(data002)
+    #print(responseRecordData.RecordList)
+
+    responseRecordData.Status = 1
+    jsonData = json.dumps(vars(responseRecordData))
+    serverData.JsonData = jsonData
+
+    return serverData
 
 
-def requestUploadRecordWork(inJsontData):
+def requestUploadRecordWork(inJsonData):
+    serverData = ServerData()
+    serverData.Command = serverCommand.responseUploadRecord
+
+    recordData = RequestUploadRecordData()
+    recordDataString = json.loads(inJsonData)
+    recordData.CircultName = recordDataString["CircultName"]
+    recordData.UserID = recordDataString["UserID"]
+    recordData.StartNumber = recordDataString["StartNumber"]
+
+    print("REQUEST RECORD DATA:")
+    print(recordData.CircultName)
+    print(recordData.UserID)
+    print(recordData.StartNumber)
+
+    #check can login or not
+
+    #TEST
     responseUploadRecordData = ResponseUploadRecordData()
-    return responseUploadRecordData
+
+    responseUploadRecordData.Status = 1
+
+    jsonData = json.dumps(vars(responseUploadRecordData))
+
+    serverData.JsonData = jsonData
+
+    return serverData
 
 
 def requestErrorWork():
@@ -183,6 +304,7 @@ def index(request):
         responseServerData = commandFunctions[serverData.Command](
             serverData.JsonData)
     else:
+
         responseServerData.Command = serverCommand.requestError
         responseServerData.JsonData = requestErrorWork()
 
