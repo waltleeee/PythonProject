@@ -73,7 +73,7 @@ class circultTimeData:
 
 class ResponseRecordData:
     Status = 0
-    RecordList = []
+    RecordList = None
 
 
 class ResponseUploadRecordData:
@@ -196,46 +196,12 @@ def requestRecordWork(inJsonData):
     circultData1.CircultName = "MuteCity"
     circultData1.Time = "1:15.256"
 
-    #data001 = json.dumps(vars(circultData0))
-    #data002 = json.dumps(vars(circultData1))
     data001 = circultData0.GetData()
     data002 = circultData1.GetData()
 
-    print("!!!!!")
-    print(data001)
-    print(data002)
-    # data003 = {
-    #     "Account": "WALT",
-    #     "Time": "1:14.133",
-    #     "CircultName": "MuteCity"
-    # }
-
-    # data004 = {
-    #     "Account": "WALT2",
-    #     "Time": "1:15.133",
-    #     "CircultName": "MuteCity"
-    # }
-
-    #OK
-    #responseRecordData.RecordList = [data003, data004]
-
-    #NOT OK
-    #responseRecordData.RecordList.append(data003)
-    #responseRecordData.RecordList.append(data004)
-
-    #OK
-    testData = []
-    testData.append(data001)
-    testData.append(data002)
-
-    #dicData = list(testData)
-    #print("DICDATA: \n", dicData)
-    #print("TESTDATA: \n", testData)
-    #responseRecordData.RecordList = dicData
-    responseRecordData.RecordList = testData
-    #responseRecordData.RecordList.append(data001)
-    #responseRecordData.RecordList.append(data002)
-    #print(responseRecordData.RecordList)
+    responseRecordData.RecordList = []
+    responseRecordData.RecordList.append(data001)
+    responseRecordData.RecordList.append(data002)
 
     responseRecordData.Status = 1
     jsonData = json.dumps(vars(responseRecordData))
