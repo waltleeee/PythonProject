@@ -270,7 +270,6 @@ def index(request):
         responseServerData = commandFunctions[serverData.Command](
             serverData.JsonData)
     else:
-
         responseServerData.Command = serverCommand.requestError
         responseServerData.JsonData = requestErrorWork()
 
