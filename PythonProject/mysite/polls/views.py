@@ -278,18 +278,53 @@ def index(request):
     responseBase64Data = base64.b64encode(responseJsonData)
 
     #TEST MONGO
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['test']
-    pythontestdb = db['pythontestdb']
-    #insertData = {"Account": "walt", "Password": "1234", "UserID": ""}
-    #postID = pythontestdb.insert_one(insertData)
+    # client = MongoClient('mongodb://localhost:27017/')
+    # db = client['test']
+    # pythontestdb = db['pythontestdb']
 
-    testData = pythontestdb.find_one({"Account": "walt"})
-    #print(users.find_one({"Account": "walt"}))
-    print(testData)
-    print(testData['Account'])
-    print(testData['Password'])
-    print(testData['UserID'])
+    #TEST insert_one
+    # insertData = {"Account": "walt", "Password": "1234", "UserID": ""}
+    # postID = pythontestdb.insert_one(insertData)
+
+    #TEST insert_many
+    # insertDatas = [{
+    #     "Account": "walt2",
+    #     "Password": "1111",
+    #     "UserID": ""
+    # }, {
+    #     "Account": "walt3",
+    #     "Password": "2222",
+    #     "UserID": ""
+    # }]
+    # result = pythontestdb.insert_many(insertDatas)
+    # print(result.inserted_ids)
+
+    #TEST find_one
+    # testData = pythontestdb.find_one({"Account": "walt"})
+    # print(users.find_one({"Account": "walt"}))
+    # print(testData)
+    # print(testData['Account'])
+    # print(testData['Password'])
+    # print(testData['UserID'])
+
+    #TEST find
+    # testDatas = pythontestdb.find({"Account": "walt"})
+    # for data in testDatas:
+    #     print(data)
+
+    #TEST Counting
+    # print(pythontestdb.count_documents({}))
+    # print(pythontestdb.count_documents({"Account": "walt"}))
+
+    #TEST update_one
+    # needUpdateData = {"Account": "walt2"}
+    # newData = {"$set": {"Password": "XXXX"}}
+    # pythontestdb.update_one(needUpdateData, newData)
+
+    #TEST update_many
+    # needUpdateData2 = {"Account": "walt"}
+    # newData2 = {"$set": {"Password": "ＷＷＷＷＷ"}}
+    # pythontestdb.update_many(needUpdateData2, newData2)
 
     return HttpResponse(responseBase64Data)
 
