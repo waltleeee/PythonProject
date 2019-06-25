@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import base64
 import polls.serverCommand as serverCommand
+import datetime
 from pymongo import MongoClient
 
 
@@ -26,7 +27,7 @@ class RequestLogoutData:
     UserID = ""
 
 
-class RequestRecordData:
+class RequestRankData:
     CircultName = ""
     RequestCount = 0
     StartNumber = 0
@@ -72,9 +73,9 @@ class circultTimeData:
         }
 
 
-class ResponseRecordData:
+class ResponseRankData:
     Status = 0
-    RecordList = None
+    RankList = None
 
 
 class ResponseUploadRecordData:
@@ -91,6 +92,8 @@ class ResponseUploadRecordData:
 
 #         return json.JSONEncoder.default(self, obj)
 
+client = MongoClient('mongodb://localhost:27017/')
+
 
 def requestLoginWork(inJsonData):
     serverData = ServerData()
@@ -105,16 +108,27 @@ def requestLoginWork(inJsonData):
     print(loginData.Account)
     print(loginData.Password)
 
-    #check can login or not
-
-    #TEST
     responseLoginData = ResponseLoginData()
-    responseLoginData.Status = 1
-    responseLoginData.UserID = loginData.Account + "001"
+
+    #check can login or not
+    db = client['test']
+    users = db['users']
+
+    if users.count_documents({"Account": loginData.Account}) != 0:
+        user = users.find_one({"Account": loginData.Account})
+        if user['Password'] != loginData.Password:
+            responseLoginData.Status = 2
+        else:
+            responseLoginData.Status = 1
+            responseLoginData.UserID = "&&%" + loginData.Account
+            needUpdateData = {"Account": loginData.Account}
+            newData = {"$set": {"LastActTime": datetime.datetime.now()}}
+            users.update_one(needUpdateData, newData)
+    else:
+        responseLoginData.Status = 2
+
     jsonData = json.dumps(vars(responseLoginData))
-
     serverData.JsonData = jsonData
-
     return serverData
 
 
@@ -131,12 +145,30 @@ def requestRegisterWork(inJsonData):
     print(registerData.Account)
     print(registerData.Password)
 
-    #check can Register or not
-
-    #TEST
     responseRegisterData = ResponseRegisterData()
-    responseRegisterData.Status = 1
-    responseRegisterData.UserID = registerData.Account + "001"
+
+    #check can Register or not
+    db = client['test']
+    users = db['users']
+
+    if users.count_documents({"Account": registerData.Account}) != 0:
+        responseRegisterData.Status = 2
+    elif users.count_documents({"Password": registerData.Password}) != 0:
+        responseRegisterData.Status = 3
+    else:
+        newUserData = {
+            "Account": registerData.Account,
+            "Password": registerData.Password,
+            "UserID": "-1",
+            "LastActTime": datetime.datetime.now(),
+            "RegisterTime": datetime.datetime.now()
+        }
+        oid = users.insert_one(newUserData)
+        if oid != None:
+            responseRegisterData.Status = 1
+        else:
+            responseRegisterData.Status = -1
+
     jsonData = json.dumps(vars(responseRegisterData))
 
     serverData.JsonData = jsonData
@@ -168,25 +200,25 @@ def requestLogoutWork(inJsonData):
     return serverData
 
 
-def requestRecordWork(inJsonData):
+def requestRankWork(inJsonData):
     serverData = ServerData()
-    serverData.Command = serverCommand.responseRecord
+    serverData.Command = serverCommand.responseRank
 
-    recordData = RequestRecordData()
-    recordDataString = json.loads(inJsonData)
-    recordData.CircultName = recordDataString["CircultName"]
-    recordData.RequestCount = recordDataString["RequestCount"]
-    recordData.StartNumber = recordDataString["StartNumber"]
+    rankData = RequestRankData()
+    rankDataString = json.loads(inJsonData)
+    rankData.CircultName = rankDataString["CircultName"]
+    rankData.RequestCount = rankDataString["RequestCount"]
+    rankData.StartNumber = rankDataString["StartNumber"]
 
     print("REQUEST RECORD DATA:")
-    print(recordData.CircultName)
-    print(recordData.RequestCount)
-    print(recordData.StartNumber)
+    print(rankData.CircultName)
+    print(rankData.RequestCount)
+    print(rankData.StartNumber)
 
     #check can get record or not
 
     #TEST
-    responseRecordData = ResponseRecordData()
+    responseRankData = ResponseRankData()
     circultData0 = circultTimeData()
     circultData1 = circultTimeData()
 
@@ -200,12 +232,12 @@ def requestRecordWork(inJsonData):
     data001 = circultData0.GetData()
     data002 = circultData1.GetData()
 
-    responseRecordData.RecordList = []
-    responseRecordData.RecordList.append(data001)
-    responseRecordData.RecordList.append(data002)
+    responseRankData.RankList = []
+    responseRankData.RankList.append(data001)
+    responseRankData.RankList.append(data002)
 
-    responseRecordData.Status = 1
-    jsonData = json.dumps(vars(responseRecordData))
+    responseRankData.Status = 1
+    jsonData = json.dumps(vars(responseRankData))
     serverData.JsonData = jsonData
 
     return serverData
@@ -248,7 +280,7 @@ commandFunctions = {
     serverCommand.requestLogin: requestLoginWork,
     serverCommand.requestLogout: requestLogoutWork,
     serverCommand.requestRegister: requestRegisterWork,
-    serverCommand.requestRecord: requestRecordWork,
+    serverCommand.requestRank: requestRankWork,
     serverCommand.requestUploadRecord: requestUploadRecordWork
 }
 
@@ -279,8 +311,8 @@ def index(request):
 
     #TEST MONGO
     # client = MongoClient('mongodb://localhost:27017/')
-    # db = client['test']
-    # pythontestdb = db['pythontestdb']
+    #db = client['test']
+    #pythontestdb = db['pythontestdb']
 
     #TEST insert_one
     # insertData = {"Account": "walt", "Password": "1234", "UserID": ""}
@@ -308,9 +340,9 @@ def index(request):
     # print(testData['UserID'])
 
     #TEST find
-    # testDatas = pythontestdb.find({"Account": "walt"})
-    # for data in testDatas:
-    #     print(data)
+    #testDatas = pythontestdb.find({"Account": "walt"})
+    #for data in testDatas:
+    #    print(data)
 
     #TEST Counting
     # print(pythontestdb.count_documents({}))
