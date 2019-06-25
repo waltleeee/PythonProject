@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import base64
 import polls.serverCommand as serverCommand
+from pymongo import MongoClient
 
 
 class ServerData:
@@ -275,6 +276,20 @@ def index(request):
 
     responseJsonData = json.dumps(vars(responseServerData)).encode()
     responseBase64Data = base64.b64encode(responseJsonData)
+
+    #TEST MONGO
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['test']
+    pythontestdb = db['pythontestdb']
+    #insertData = {"Account": "walt", "Password": "1234", "UserID": ""}
+    #postID = pythontestdb.insert_one(insertData)
+
+    testData = pythontestdb.find_one({"Account": "walt"})
+    #print(users.find_one({"Account": "walt"}))
+    print(testData)
+    print(testData['Account'])
+    print(testData['Password'])
+    print(testData['UserID'])
 
     return HttpResponse(responseBase64Data)
 
