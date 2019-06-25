@@ -122,7 +122,12 @@ def requestLoginWork(inJsonData):
             responseLoginData.Status = 1
             responseLoginData.UserID = "&&%" + loginData.Account
             needUpdateData = {"Account": loginData.Account}
-            newData = {"$set": {"LastActTime": datetime.datetime.now()}}
+            newData = {
+                "$set": {
+                    "UserID": responseLoginData.UserID,
+                    "LastActTime": datetime.datetime.now()
+                }
+            }
             users.update_one(needUpdateData, newData)
     else:
         responseLoginData.Status = 2
@@ -187,12 +192,27 @@ def requestLogoutWork(inJsonData):
     print("REQUEST LOGOUT DATA:")
     print(logoutData.UserID)
 
-    #check can logout or not
-
-    #TEST
     responseLogoutData = ResponseLogoutData()
-    responseLogoutData.Status = 1
-    print(responseLogoutData)
+
+    responseLogoutData = ResponseLogoutData()
+
+    #check can logout or not
+    db = client['test']
+    users = db['users']
+
+    if users.count_documents({"UserID": logoutData.UserID}) != 0:
+        responseLogoutData.Status = 1
+        needUpdateData = {"UserID": logoutData.UserID}
+        newData = {
+            "$set": {
+                "UserID": "-1",
+                "LastActTime": datetime.datetime.now()
+            }
+        }
+        users.update_one(needUpdateData, newData)
+    else:
+        responseLogoutData.Status = -3
+
     jsonData = json.dumps(vars(responseLogoutData))
 
     serverData.JsonData = jsonData
