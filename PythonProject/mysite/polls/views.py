@@ -250,6 +250,33 @@ def makeTimePoint(inMinute, inSecond, inMS):
         return 9999999
 
 
+def sortRecord(inRecords):
+
+    if len(inRecords) == 0:
+        return inRecords
+
+    smallIndex = 0
+    checkIndex = 0
+    tempRecord = None
+
+    #find most fast timePoint
+    for i in range(len(inRecords)):
+        smallIndex = i
+        checkIndex = smallIndex + 1
+        while checkIndex <= (len(inRecords) - 1):
+            if inRecords[checkIndex]["TimePoint"] < inRecords[smallIndex][
+                    "TimePoint"]:
+                smallIndex = checkIndex
+            checkIndex += 1
+
+        if smallIndex != i:
+            tempRecord = inRecords[smallIndex]
+            inRecords[smallIndex] = inRecords[i]
+            inRecords[i] = tempRecord
+
+    return inRecords
+
+
 def requestRankWork(inJsonData):
     serverData = ServerData()
     serverData.Command = serverCommand.responseRank
@@ -309,6 +336,10 @@ def requestRankWork(inJsonData):
                         "TimePoint": makeTimePoint(time[0], time[1], time[2])
                     }
                     records.insert(0, record)
+
+                print(records)
+
+                records = sortRecord(records)
 
                 print(records)
 
