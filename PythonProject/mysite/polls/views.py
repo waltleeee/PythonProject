@@ -96,6 +96,8 @@ class ResponseUploadRecordData:
 
 client = MongoClient('mongodb://localhost:27017/')
 checkLimit = 5
+muteCityRankList = []
+muteCityEXRankList = []
 
 
 def requestLoginWork(inJsonData):
@@ -233,6 +235,9 @@ def CheckIsCircultNameExist(inCircultName):
 
 
 def checkOverTime(inCheckTime):
+
+    print("CHECK OVER TIME")
+    print(checkLimit)
     nowTime = datetime.datetime.now()
     if nowTime - inCheckTime > datetime.timedelta(seconds=checkLimit):
         return True
@@ -286,6 +291,62 @@ def getCircultID(inCircultName):
         return ""
 
 
+def getRankList(inCircultName, inStartIndex, inNeedCount):
+    origionRankList = []
+    if inCircultName == "muteCity":
+        origionRankList = muteCityRankList
+    elif inCircultName == "muteCityEX":
+        origionRankList = muteCityEXRankList
+
+    if len(origionRankList) > 0 and len(origionRankList) > inStartIndex:
+        size = 0
+        if len(origionRankList) >= (inStartIndex + inNeedCount):
+            size = inNeedCount
+        else:
+            size = (len(origionRankList) - inStartIndex)
+
+        rankList = []
+        index = inStartIndex
+
+        while len(rankList) < size:
+            rankList.insert(len(rankList), origionRankList[index])
+            index += 1
+
+        # for i:=inStartIndex;i<len(origionRankList);i++{
+        # 	rankList[index]=origionRankList[i]
+        # 	index++
+
+        # 	if index>=size{
+        # 		break
+        # 	}
+        # }
+
+        print("SIZE")
+        print(size)
+        print("RANKLIST")
+        print(rankList)
+
+        return rankList
+    else:
+        return origionRankList
+
+
+def updateLocalRankList(inCircultName, inRankList):
+    if inCircultName == "muteCity":
+        global muteCityRankList
+        muteCityRankList = inRankList
+    elif inCircultName == "muteCityEX":
+        global muteCityEXRankList
+        muteCityEXRankList = inRankList
+
+
+def InitialRankList():
+    db = client['test']
+    rankCollection = db['muteCityRank']
+    circultID = getCircultID("muteCity")
+    rankResult = rankCollection.find_one({"ID": circultID})
+
+
 def requestRankWork(inJsonData):
     serverData = ServerData()
     serverData.Command = serverCommand.responseRank
@@ -316,85 +377,87 @@ def requestRankWork(inJsonData):
             responseRankData.Status = -2
         else:
             print("REQUEST RANK CIRCULT NAME OK")
-            responseRankData.Status = 1
+
             rankUpdateTime = db['circultUpdateTime']
             responseRankData.CircultName = rankData.CircultName
             updateTimeResult = rankUpdateTime.find_one(
                 {"circultName": rankData.CircultName})
-            print("UPDATE TIME RESULT")
-            print(updateTimeResult['circultName'])
-            print(updateTimeResult['LastUpdateTime'])
-            print(type(updateTimeResult['LastUpdateTime']))
-            print(checkOverTime(updateTimeResult['LastUpdateTime']))
 
-            if checkOverTime(updateTimeResult['LastUpdateTime']):
-                print("NEED UPDATE LAST UPDATE TIME")
-                needUpdateData = {"circultName": rankData.CircultName}
-                newData = {"$set": {"LastUpdateTime": datetime.datetime.now()}}
-                rankUpdateTime.update_one(needUpdateData, newData)
+            if updateTimeResult != None:
 
-                circultRecord = db[rankData.CircultName]
-                allRecord = circultRecord.find({})
-                records = []
-                for data in allRecord:
-                    print(data)
-                    time = data['Time'].split(':')
-                    record = {
-                        "Account": data['Account'],
-                        "Time": data['Time'],
-                        "TimePoint": makeTimePoint(time[0], time[1], time[2])
+                print("UPDATE TIME RESULT")
+                print(updateTimeResult['circultName'])
+                print(updateTimeResult['LastUpdateTime'])
+                print(type(updateTimeResult['LastUpdateTime']))
+                print(checkOverTime(updateTimeResult['LastUpdateTime']))
+
+                if checkOverTime(updateTimeResult['LastUpdateTime']):
+                    print("NEED UPDATE LAST UPDATE TIME")
+                    needUpdateData = {"circultName": rankData.CircultName}
+                    newData = {
+                        "$set": {
+                            "LastUpdateTime": datetime.datetime.now()
+                        }
                     }
-                    records.insert(0, record)
+                    rankUpdateTime.update_one(needUpdateData, newData)
 
-                print(records)
+                    circultRecord = db[rankData.CircultName]
+                    allRecord = circultRecord.find({})
+                    records = []
+                    for data in allRecord:
+                        print(data)
+                        time = data['Time'].split(':')
+                        record = {
+                            "Account": data['Account'],
+                            "Time": data['Time'],
+                            "TimePoint": makeTimePoint(time[0], time[1],
+                                                       time[2])
+                        }
+                        records.insert(0, record)
 
-                records = sortRecord(records)
+                    #print(records)
 
-                print(records)
+                    records = sortRecord(records)
 
-                rankDataList = []
+                    #print(records)
 
-                for i in range(len(records)):
-                    data = {
-                        "Account": records[i]['Account'],
-                        "Time": records[i]['Time'],
-                        "Rank": i + 1
-                    }
-                    rankDataList.insert(len(rankDataList), data)
+                    rankDataList = []
 
-                print("RANK DATA LIST")
-                print(rankDataList)
+                    for i in range(len(records)):
+                        data = {
+                            "Account": records[i]['Account'],
+                            "Time": records[i]['Time'],
+                            "Rank": i + 1
+                        }
+                        rankDataList.insert(len(rankDataList), data)
 
-                circultID = getCircultID(rankData.CircultName)
-                rankCollection = db[rankData.CircultName + 'Rank']
-                updateCondition = {"ID": circultID}
-                newRankList = {"$set": {"RankList": rankDataList}}
-                rankCollection.update_one(updateCondition, newRankList)
+                    print("RANK DATA LIST")
+                    print(rankDataList)
 
+                    circultID = getCircultID(rankData.CircultName)
+                    rankCollection = db[rankData.CircultName + 'Rank']
+                    updateCondition = {"ID": circultID}
+                    newRankList = {"$set": {"RankList": rankDataList}}
+                    rankCollection.update_one(updateCondition, newRankList)
+
+                    updateLocalRankList(rankData.CircultName, rankDataList)
+                    # print("SHOW LOCAL RANK LIST")
+                    # print(muteCityRankList)
+                    # print(muteCityEXRankList)
+                else:
+                    print("UPDATE RANK TIME LIMIT NOT REACH")
+
+                responseRankData.RankList = getRankList(
+                    rankData.CircultName, rankData.StartNumber,
+                    rankData.RequestCount)
+                responseRankData.Status = 1
+            else:
+                print("DB HAVE NO CIRCULT UPDATE TIME DATA")
+                responseRankData.Status = -1
     else:
         print("NO USER, NO REQUEST RECORD")
         responseRankData.Status = -3
 
-    #TEST
-
-    # circultData0 = circultTimeData()
-    # circultData1 = circultTimeData()
-
-    # circultData0.Account = "WALT"
-    # circultData0.CircultName = "MuteCity"
-    # circultData0.Time = "1:14.133"
-    # circultData1.Account = "WALT2"
-    # circultData1.CircultName = "MuteCity"
-    # circultData1.Time = "1:15.256"
-
-    # data001 = circultData0.GetData()
-    # data002 = circultData1.GetData()
-
-    # responseRankData.RankList = []
-    # responseRankData.RankList.append(data001)
-    # responseRankData.RankList.append(data002)
-
-    # responseRankData.Status = 1
     jsonData = json.dumps(vars(responseRankData))
     serverData.JsonData = jsonData
 
