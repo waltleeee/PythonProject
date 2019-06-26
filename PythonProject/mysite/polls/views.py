@@ -277,6 +277,15 @@ def sortRecord(inRecords):
     return inRecords
 
 
+def getCircultID(inCircultName):
+    if inCircultName == "muteCity":
+        return "1000"
+    elif inCircultName == "muteCityEX":
+        return "1001"
+    else:
+        return ""
+
+
 def requestRankWork(inJsonData):
     serverData = ServerData()
     serverData.Command = serverCommand.responseRank
@@ -342,6 +351,25 @@ def requestRankWork(inJsonData):
                 records = sortRecord(records)
 
                 print(records)
+
+                rankDataList = []
+
+                for i in range(len(records)):
+                    data = {
+                        "Account": records[i]['Account'],
+                        "Time": records[i]['Time'],
+                        "Rank": i + 1
+                    }
+                    rankDataList.insert(len(rankDataList), data)
+
+                print("RANK DATA LIST")
+                print(rankDataList)
+
+                circultID = getCircultID(rankData.CircultName)
+                rankCollection = db[rankData.CircultName + 'Rank']
+                updateCondition = {"ID": circultID}
+                newRankList = {"$set": {"RankList": rankDataList}}
+                rankCollection.update_one(updateCondition, newRankList)
 
     else:
         print("NO USER, NO REQUEST RECORD")
