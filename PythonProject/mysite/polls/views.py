@@ -345,6 +345,18 @@ def InitialRankList():
     rankCollection = db['muteCityRank']
     circultID = getCircultID("muteCity")
     rankResult = rankCollection.find_one({"ID": circultID})
+    global muteCityRankList
+    muteCityRankList=rankResult['RankList']
+
+    rankCollection = db['muteCityEXRank']
+    circultID = getCircultID("muteCityEX")
+    rankResult = rankCollection.find_one({"ID": circultID})
+    global muteCityEXRankList
+    muteCityEXRankList=rankResult['RankList']
+
+    print("INITIAL RANK LIST")
+    print(muteCityRankList)
+    print(muteCityEXRankList)
 
 
 def requestRankWork(inJsonData):
