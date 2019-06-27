@@ -346,16 +346,18 @@ def InitialRankList():
     circultID = getCircultID("muteCity")
     rankResult = rankCollection.find_one({"ID": circultID})
     global muteCityRankList
-    muteCityRankList=rankResult['RankList']
+    muteCityRankList = rankResult['RankList']
 
     rankCollection = db['muteCityEXRank']
     circultID = getCircultID("muteCityEX")
     rankResult = rankCollection.find_one({"ID": circultID})
     global muteCityEXRankList
-    muteCityEXRankList=rankResult['RankList']
+    muteCityEXRankList = rankResult['RankList']
 
     print("INITIAL RANK LIST")
+    print("MUTE CITY RANK LIST")
     print(muteCityRankList)
+    print("MUTE CITY EX RANK LIST")
     print(muteCityEXRankList)
 
 
@@ -466,6 +468,11 @@ def requestRankWork(inJsonData):
             else:
                 print("DB HAVE NO CIRCULT UPDATE TIME DATA")
                 responseRankData.Status = -1
+
+        userUpdateCondition = {"UserID": rankData.UserID}
+        userUpdateData = {"$set": {"LastActTime": datetime.datetime.now()}}
+        users.update_one(userUpdateCondition, userUpdateData)
+
     else:
         print("NO USER, NO REQUEST RECORD")
         responseRankData.Status = -3
@@ -476,27 +483,118 @@ def requestRankWork(inJsonData):
     return serverData
 
 
+def checkUploadIsFaster(inUploadTime, inOrigionTime):
+    uploadTime = inUploadTime.split(':')
+    origionTime = inOrigionTime.split(':')
+
+    try:
+        uploadElement = int(uploadTime[0])
+    except ValueError:
+        print("CHECK MINUTE FASTER TRANSFORM TO INT ERROR")
+        return False
+
+    try:
+        origionElement = int(origionTime[0])
+    except ValueError:
+        print("CHECK MINUTE FASTER TRANSFORM TO INT ERROR")
+        return False
+
+    if uploadElement < origionElement:
+        return True
+    elif uploadElement == origionElement:
+        try:
+            uploadElement = int(uploadTime[1])
+        except ValueError:
+            print("CHECK SECOND FASTER TRANSFORM TO INT ERROR")
+            return False
+
+        try:
+            origionElement = int(origionTime[1])
+        except ValueError:
+            print("CHECK SECOND FASTER TRANSFORM TO INT ERROR")
+            return False
+
+        if uploadElement < origionElement:
+            return True
+        elif uploadElement == origionElement:
+            try:
+                uploadElement = int(uploadTime[2])
+            except ValueError:
+                print("CHECK MS FASTER TRANSFORM TO INT ERROR")
+                return False
+
+            try:
+                origionElement = int(origionTime[2])
+            except ValueError:
+                print("CHECK MS FASTER TRANSFORM TO INT ERROR")
+                return False
+
+            if uploadElement < origionElement:
+                return True
+            else:
+                return False
+        else:
+            return False
+    else:
+        return False
+
+
 def requestUploadRecordWork(inJsonData):
     serverData = ServerData()
     serverData.Command = serverCommand.responseUploadRecord
 
-    recordData = RequestUploadRecordData()
+    uploadData = RequestUploadRecordData()
     recordDataString = json.loads(inJsonData)
-    recordData.CircultName = recordDataString["CircultName"]
-    recordData.UserID = recordDataString["UserID"]
-    recordData.StartNumber = recordDataString["StartNumber"]
+    uploadData.CircultName = recordDataString["CircultName"]
+    uploadData.UserID = recordDataString["UserID"]
+    uploadData.Time = recordDataString["Time"]
 
     print("REQUEST RECORD DATA:")
-    print(recordData.CircultName)
-    print(recordData.UserID)
-    print(recordData.StartNumber)
+    print(uploadData.CircultName)
+    print(uploadData.UserID)
+    print(uploadData.Time)
 
-    #check can upload record or not
-
-    #TEST
     responseUploadRecordData = ResponseUploadRecordData()
 
-    responseUploadRecordData.Status = 1
+    #check can upload record or not
+    db = client['test']
+    users = db['users']
+
+    if users.count_documents({"UserID": uploadData.UserID}) != 0:
+        print("REQUEST UPLOAD RECORD USERID OK")
+        if CheckIsCircultNameExist(uploadData.CircultName) == False:
+            print("REQUEST UPLOAD RECORD CIRCULT NAME ERROR")
+            responseUploadRecordData.Status = -2
+        else:
+            user = users.find_one({"UserID": uploadData.UserID})
+            records = db[uploadData.CircultName]
+            record = records.find_one({"Account": user['Account']})
+            if record == None:
+                print("HAVE USER BUT NO RECORD")
+                newRecordData = {
+                    "Account": user['Account'],
+                    "Time": uploadData.Time
+                }
+                records.insert_one(newRecordData)
+
+            else:
+                if checkUploadIsFaster(uploadData.Time,
+                                       record['Time']) == True:
+                    print("UPLOAD IS FASTER")
+                    updateRecordCondition = {"Account": user['Account']}
+                    updateRecord = {"$set": {"Time": uploadData.Time}}
+                    records.update_one(updateRecordCondition, updateRecord)
+                else:
+                    print("ORIGIN IS FASTER,NO UPLOAD")
+            responseUploadRecordData.Status = 1
+
+        userUpdateCondition = {"UserID": uploadData.UserID}
+        userUpdateData = {"$set": {"LastActTime": datetime.datetime.now()}}
+        users.update_one(userUpdateCondition, userUpdateData)
+
+    else:
+        print("REQUEST UPLOAD RECORD USERID ERROR")
+        responseUploadRecordData.Status = -3
 
     jsonData = json.dumps(vars(responseUploadRecordData))
 
